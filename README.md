@@ -17,6 +17,7 @@ La fin du sujet se trouve dans dans [ce fichier](TP5-Sujet.pdf).
 - [ ] Création du dashboard
 
 ### Création du dashboard
-- [ ] Parsing JSON des données
+- [x] Parsing JSON des données
+- [x] Tri des bilans dans un tableau `bilans[ANNEE][MOIS]`
 - [ ] Traitement ...
 - [ ] Affichage dans le dashboard
