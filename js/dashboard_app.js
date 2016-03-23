@@ -30,7 +30,7 @@ StandaloneDashboard(function (db) {
                 dataType: 'json'
             })
             .done(function (bilans) {
-                console.log(bilans);
+                self.sortBilans(bilans);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 alert("Impossible de récupérer le flux JSON");
@@ -39,6 +39,33 @@ StandaloneDashboard(function (db) {
             .always(function () {
                 self.$loader.fadeOut();
             });
+    }
+
+    self.sortBilans = function(bilans) {
+        for(var bilan of bilans) {
+            bilan = bilan.bilan;
+
+            var created = {
+                year: 0,
+                month: 0,
+                parts: bilan.created.split('/')
+            }
+
+            created.year = created.parts[1];
+            created.month = created.parts[0];
+
+            if(self.bilans[created.year] == void 0) {
+                self.bilans[created.year] = {};
+            }
+
+            if(self.bilans[created.year][created.month] == void 0) {
+                self.bilans[created.year][created.month] = []
+            }
+
+            self.bilans[created.year][created.month].push(bilan);
+        }
+
+        console.log(self.bilans);
     }
 
 
