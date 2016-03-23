@@ -27,11 +27,51 @@ StandaloneDashboard(function (db) {
 
         self.loadDatas(function (bilans) {
             self.bilans = self.sortBilans(bilans.bilans);
-            self.forNMonths(12, self.bilans, function(months, keys) {
-                chart.setLabels(keys);
-                chart.addSeries(keys);
+            self.forNMonths(12, self.bilans, function (bilans, months) {
+                var series = [];
+                chart.setLabels(months);
 
+                months.forEach(function (month) {
+                    var monthTotal = 0;
 
+                    bilans[month].forEach(function (bilan) {
+                        var fieldBilan = JSON.parse(bilan.field_bilan);
+                        var fieldBilanInitial = bilan.field_bilan_initial;
+                        var fieldBilanPourFacturation = bilan.field_pour_facturation;
+                        var keyWords = fieldBilan.keyWords;
+
+                        var total = 0;
+                        var coeffFactu = 1;
+
+                        keyWords.forEach(function(keyWord) {
+
+                            if(keyWord.found) {
+                                var position = keyWord.positions[0];
+
+                                if(position.position < 0 || position.position > 10) {
+                                    return;
+                                }
+
+                                total += 1 * bilan['field_factu_place_' + position.position];
+                            }
+                        });
+
+                        if(fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
+                            coeffFactu = bilan.field_coef_factu_first_iso;
+                        } else if(fieldBilanInitial <= fieldBilanPourFacturation) {
+                            coeffFactu = bilan.field_coef_factu_inf;
+                        } else if(fieldBilanInitial == fieldBilanPourFacturation) {
+                            coeffFactu = bilan.field_coef_factu_iso;
+                        }
+
+                        total *= coeffFactu;
+                        monthTotal += total;
+                    });
+
+                    series.push(monthTotal);
+                });
+
+                chart.addSeries(series);
                 chart.unlock();
             });
         });
@@ -77,13 +117,13 @@ StandaloneDashboard(function (db) {
         return _bilans;
     }
 
-    self.forNMonths = function(nbMonth, bilans, cb) {
+    self.forNMonths = function (nbMonth, bilans, cb) {
         var months = {};
         var keys = Object.keys(bilans).sort();
         var _monthsKeys = keys.slice(keys.length - nbMonth, keys.length);
         var _monthKey = 0;
 
-        for(var _monthsIndex in _monthsKeys) {
+        for (var _monthsIndex in _monthsKeys) {
             _monthKey = _monthsKeys[_monthsIndex];
             months[_monthKey] = bilans[_monthKey];
         }
