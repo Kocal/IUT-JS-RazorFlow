@@ -10,14 +10,35 @@ StandaloneDashboard(function (db) {
     // These components are simply here to give you a quick introduction of how RazorFlow Works
     var self = this;
 
-    (function init() {
-        db.setDashboardTitle("My Dashboard");
-        initLoader();
-    })();
+    self.JSON_URL = 'http://www.francelink.net/datas.json';
 
-    function initLoader() {
+    self.init = function () {
+        db.setDashboardTitle("My Dashboard");
+        self.initLoader();
+        self.loadDatas();
+    };
+
+    self.initLoader = function () {
         self.$loader = $('.loader');
         self.$loader.hide();
+    }
+
+    self.loadDatas = function () {
+        self.$loader.fadeIn();
+
+        $.ajax(self.JSON_URL, {
+                dataType: 'json'
+            })
+            .done(function (bilans) {
+                console.log(bilans);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Impossible de récupérer le flux JSON");
+                console.error(textStatus, errorThrown);
+            })
+            .always(function () {
+                self.$loader.fadeOut();
+            });
     }
 
 
@@ -46,4 +67,5 @@ StandaloneDashboard(function (db) {
     // });
     //
     // db.addComponent(chart2);
+    self.init();
 });
