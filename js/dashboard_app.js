@@ -22,18 +22,18 @@ StandaloneDashboard(function (db) {
     self.initChart = function () {
         var chart = new ChartComponent();
         chart.setCaption('Facturations');
-        chart.setDimensions(4, 4);
+        chart.setDimensions(12, 6);
         chart.lock();
 
         self.loadDatas(function (bilans) {
             self.bilans = self.sortBilans(bilans.bilans);
+            self.forNMonths(12, self.bilans, function(months, keys) {
+                chart.setLabels(keys);
+                chart.addSeries(keys);
 
-            var months = self.getLastNMonths(12, self.bilans);
 
-            // C'est juste pour des tests :-)
-            setTimeout(function () {
                 chart.unlock();
-            }, 2000);
+            });
         });
 
         db.addComponent(chart);
@@ -77,7 +77,7 @@ StandaloneDashboard(function (db) {
         return _bilans;
     }
 
-    self.getLastNMonths = function(nbMonth, bilans) {
+    self.forNMonths = function(nbMonth, bilans, cb) {
         var months = {};
         var keys = Object.keys(bilans).sort();
         var _monthsKeys = keys.slice(keys.length - nbMonth, keys.length);
@@ -88,7 +88,7 @@ StandaloneDashboard(function (db) {
             months[_monthKey] = bilans[_monthKey];
         }
 
-        return months;
+        cb(months, _monthsKeys);
     }
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
