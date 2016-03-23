@@ -8,11 +8,18 @@ StandaloneDashboard(function (db) {
     // YOU CAN DELETE THE ENTIRE CONTENTS OF THIS FUNCTION AND CUSTOMIZE
     // AS PER YOUR REQUIREMENT.
     // These components are simply here to give you a quick introduction of how RazorFlow Works
+    var self = this;
 
-    var $loader = $('.loader');
-    $loader.hide()
+    (function init() {
+        db.setDashboardTitle("My Dashboard");
+        initLoader();
+    })();
 
-    db.setDashboardTitle("My Dashboard");
+    function initLoader() {
+        self.$loader = $('.loader');
+        self.$loader.hide();
+    }
+
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
     // var chart = new ChartComponent();
