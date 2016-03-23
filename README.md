@@ -9,11 +9,13 @@ La fin du sujet se trouve dans dans [ce fichier](TP5-Sujet.pdf).
 ## Rendu
 
 ### Chargement
-- Affichage d'un loader pendant le chargement des données
-- Le loader s'affiche lorsque les données ont été récupérées
-- Création du dashboard
+
+- [x] Création d'un loader
+- [x] Affichage du loader pendant le chargement des données
+- [ ] Le loader s'affiche lorsque les données ont été récupérées
+- [ ] Création du dashboard
 
 ### Création du dashboard
-- Parsing JSON des données
-- Traitement ...
-- Affichage dans le dashboard
+- [ ] Parsing JSON des données
+- [ ]Traitement ...
+- [ ]Affichage dans le dashboard
