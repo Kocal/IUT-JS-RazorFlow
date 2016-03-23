@@ -29,10 +29,11 @@ StandaloneDashboard(function (db) {
             self.bilans = self.sortBilans(bilans.bilans);
             self.forNMonths(12, self.bilans, function (bilans, months) {
                 var series = [];
-                chart.setLabels(months);
+                var labels = [];
 
                 months.forEach(function (month) {
                     var monthTotal = 0;
+                    var date = month.split('/');
 
                     bilans[month].forEach(function (bilan) {
                         var fieldBilan = JSON.parse(bilan.field_bilan);
@@ -42,6 +43,10 @@ StandaloneDashboard(function (db) {
 
                         var total = 0;
                         var coeffFactu = 1;
+
+                        if(fieldBilanPourFacturation == 0) {
+                            return;
+                        }
 
                         keyWords.forEach(function(keyWord) {
 
@@ -68,10 +73,13 @@ StandaloneDashboard(function (db) {
                         monthTotal += total;
                     });
 
+
+                    labels.push(date[1] + '/' + date[0]);
                     series.push(monthTotal);
                 });
 
                 chart.addSeries(series);
+                chart.setLabels(labels);
                 chart.unlock();
             });
         });
