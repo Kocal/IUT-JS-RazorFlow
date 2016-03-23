@@ -12,62 +12,124 @@ StandaloneDashboard(function (db) {
 
     self.JSON_URL = 'http://www.francelink.net/datas.json';
 
+    self.bilans = {};
+
     self.init = function () {
         db.setDashboardTitle("My Dashboard");
-        self.initLoader();
-        self.loadDatas();
+        self.initChart();
     };
 
-    self.initLoader = function () {
-        self.$loader = $('.loader');
-        self.$loader.hide();
+    self.initChart = function () {
+        var chart = new ChartComponent();
+        chart.setCaption('Facturations');
+        chart.setDimensions(12, 6);
+        chart.lock();
+
+        self.loadDatas(function (bilans) {
+            self.bilans = self.sortBilans(bilans.bilans);
+            self.forNMonths(12, self.bilans, function (bilans, months) {
+                var series = [];
+                chart.setLabels(months);
+
+                months.forEach(function (month) {
+                    var monthTotal = 0;
+
+                    bilans[month].forEach(function (bilan) {
+                        var fieldBilan = JSON.parse(bilan.field_bilan);
+                        var fieldBilanInitial = bilan.field_bilan_initial;
+                        var fieldBilanPourFacturation = bilan.field_pour_facturation;
+                        var keyWords = fieldBilan.keyWords;
+
+                        var total = 0;
+                        var coeffFactu = 1;
+
+                        keyWords.forEach(function(keyWord) {
+
+                            if(keyWord.found) {
+                                var position = keyWord.positions[0];
+
+                                if(position.position < 0 || position.position > 10) {
+                                    return;
+                                }
+
+                                total += 1 * bilan['field_factu_place_' + position.position];
+                            }
+                        });
+
+                        if(fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
+                            coeffFactu = bilan.field_coef_factu_first_iso;
+                        } else if(fieldBilanInitial <= fieldBilanPourFacturation) {
+                            coeffFactu = bilan.field_coef_factu_inf;
+                        } else if(fieldBilanInitial == fieldBilanPourFacturation) {
+                            coeffFactu = bilan.field_coef_factu_iso;
+                        }
+
+                        total *= coeffFactu;
+                        monthTotal += total;
+                    });
+
+                    series.push(monthTotal);
+                });
+
+                chart.addSeries(series);
+                chart.unlock();
+            });
+        });
+
+        db.addComponent(chart);
     }
 
-    self.loadDatas = function () {
-        self.$loader.fadeIn();
-
+    self.loadDatas = function (cb) {
         $.ajax(self.JSON_URL, {
                 dataType: 'json'
             })
-            .done(function (bilans) {
-                self.sortBilans(bilans);
-            })
+            .done(cb)
             .fail(function (jqXHR, textStatus, errorThrown) {
                 alert("Impossible de récupérer le flux JSON");
                 console.error(textStatus, errorThrown);
             })
-            .always(function () {
-                self.$loader.fadeOut();
-            });
     }
 
-    self.sortBilans = function(bilans) {
-        for(var bilan of bilans) {
+    self.sortBilans = function (bilans) {
+        var _bilans = {};
+
+        for (var bilan of bilans) {
             bilan = bilan.bilan;
 
             var created = {
-                year: 0,
-                month: 0,
-                parts: bilan.created.split('/')
+                year: '',
+                month: '',
+                parts: bilan.created.split('/'),
+                normalized: ''
             }
 
             created.year = created.parts[1];
             created.month = created.parts[0];
+            created.normalized = created.year + '/' + created.month;
 
-            if(self.bilans[created.year] == void 0) {
-                self.bilans[created.year] = {};
+            if (_bilans[created.normalized] == void 0) {
+                _bilans[created.normalized] = [];
             }
 
-            if(self.bilans[created.year][created.month] == void 0) {
-                self.bilans[created.year][created.month] = []
-            }
-
-            self.bilans[created.year][created.month].push(bilan);
+            _bilans[created.normalized].push(bilan);
         }
 
-        console.log(self.bilans);
+        return _bilans;
     }
 
+    self.forNMonths = function (nbMonth, bilans, cb) {
+        var months = {};
+        var keys = Object.keys(bilans).sort();
+        var _monthsKeys = keys.slice(keys.length - nbMonth, keys.length);
+        var _monthKey = 0;
+
+        for (var _monthsIndex in _monthsKeys) {
+            _monthKey = _monthsKeys[_monthsIndex];
+            months[_monthKey] = bilans[_monthKey];
+        }
+
+        cb(months, _monthsKeys);
+    }
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
     // var chart = new ChartComponent();
