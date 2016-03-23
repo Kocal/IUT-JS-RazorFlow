@@ -12,37 +12,44 @@ StandaloneDashboard(function (db) {
 
     self.JSON_URL = 'http://www.francelink.net/datas.json';
 
+    self.bilans = {};
+
     self.init = function () {
         db.setDashboardTitle("My Dashboard");
-        self.initLoader();
-        self.loadDatas();
+        self.initChart();
     };
 
-    self.initLoader = function () {
-        self.$loader = $('.loader');
-        self.$loader.hide();
+    self.initChart = function () {
+        var chart = new ChartComponent();
+        chart.setCaption('Facturations');
+        chart.setDimensions(4, 4);
+        chart.lock();
+
+        self.loadDatas(function (bilans) {
+            self.sortBilans(bilans.bilans);
+
+            // C'est juste pour des tests :-)
+            setTimeout(function () {
+                chart.unlock();
+            }, 2000);
+        });
+
+        db.addComponent(chart);
     }
 
-    self.loadDatas = function () {
-        self.$loader.fadeIn();
-
+    self.loadDatas = function (cb) {
         $.ajax(self.JSON_URL, {
                 dataType: 'json'
             })
-            .done(function (bilans) {
-                self.sortBilans(bilans);
-            })
+            .done(cb)
             .fail(function (jqXHR, textStatus, errorThrown) {
                 alert("Impossible de récupérer le flux JSON");
                 console.error(textStatus, errorThrown);
             })
-            .always(function () {
-                self.$loader.fadeOut();
-            });
     }
 
-    self.sortBilans = function(bilans) {
-        for(var bilan of bilans) {
+    self.sortBilans = function (bilans) {
+        for (var bilan of bilans) {
             bilan = bilan.bilan;
 
             var created = {
@@ -54,20 +61,17 @@ StandaloneDashboard(function (db) {
             created.year = created.parts[1];
             created.month = created.parts[0];
 
-            if(self.bilans[created.year] == void 0) {
+            if (self.bilans[created.year] == void 0) {
                 self.bilans[created.year] = {};
             }
 
-            if(self.bilans[created.year][created.month] == void 0) {
+            if (self.bilans[created.year][created.month] == void 0) {
                 self.bilans[created.year][created.month] = []
             }
 
             self.bilans[created.year][created.month].push(bilan);
         }
-
-        console.log(self.bilans);
     }
-
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
     // var chart = new ChartComponent();
