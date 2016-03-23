@@ -26,7 +26,9 @@ StandaloneDashboard(function (db) {
         chart.lock();
 
         self.loadDatas(function (bilans) {
-            self.sortBilans(bilans.bilans);
+            self.bilans = self.sortBilans(bilans.bilans);
+
+            var months = self.getLastNMonths(12, self.bilans);
 
             // C'est juste pour des tests :-)
             setTimeout(function () {
@@ -49,28 +51,44 @@ StandaloneDashboard(function (db) {
     }
 
     self.sortBilans = function (bilans) {
+        var _bilans = {};
+
         for (var bilan of bilans) {
             bilan = bilan.bilan;
 
             var created = {
-                year: 0,
-                month: 0,
-                parts: bilan.created.split('/')
+                year: '',
+                month: '',
+                parts: bilan.created.split('/'),
+                normalized: ''
             }
 
             created.year = created.parts[1];
             created.month = created.parts[0];
+            created.normalized = created.year + '/' + created.month;
 
-            if (self.bilans[created.year] == void 0) {
-                self.bilans[created.year] = {};
+            if (_bilans[created.normalized] == void 0) {
+                _bilans[created.normalized] = [];
             }
 
-            if (self.bilans[created.year][created.month] == void 0) {
-                self.bilans[created.year][created.month] = []
-            }
-
-            self.bilans[created.year][created.month].push(bilan);
+            _bilans[created.normalized].push(bilan);
         }
+
+        return _bilans;
+    }
+
+    self.getLastNMonths = function(nbMonth, bilans) {
+        var months = {};
+        var keys = Object.keys(bilans).sort();
+        var _monthsKeys = keys.slice(keys.length - nbMonth, keys.length);
+        var _monthKey = 0;
+
+        for(var _monthsIndex in _monthsKeys) {
+            _monthKey = _monthsKeys[_monthsIndex];
+            months[_monthKey] = bilans[_monthKey];
+        }
+
+        return months;
     }
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
