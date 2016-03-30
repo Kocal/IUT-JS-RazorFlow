@@ -44,16 +44,16 @@ StandaloneDashboard(function (db) {
                         var total = 0;
                         var coeffFactu = 1;
 
-                        if(fieldBilanPourFacturation == 0) {
+                        if (fieldBilanPourFacturation == 0) {
                             return;
                         }
 
-                        keyWords.forEach(function(keyWord) {
+                        keyWords.forEach(function (keyWord) {
 
-                            if(keyWord.found) {
+                            if (keyWord.found) {
                                 var position = keyWord.positions[0];
 
-                                if(position.position < 0 || position.position > 10) {
+                                if (position.position < 0 || position.position > 10) {
                                     return;
                                 }
 
@@ -61,11 +61,11 @@ StandaloneDashboard(function (db) {
                             }
                         });
 
-                        if(fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
+                        if (fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
                             coeffFactu = bilan.field_coef_factu_first_iso;
-                        } else if(fieldBilanInitial <= fieldBilanPourFacturation) {
+                        } else if (fieldBilanInitial <= fieldBilanPourFacturation) {
                             coeffFactu = bilan.field_coef_factu_inf;
-                        } else if(fieldBilanInitial == fieldBilanPourFacturation) {
+                        } else if (fieldBilanInitial == fieldBilanPourFacturation) {
                             coeffFactu = bilan.field_coef_factu_iso;
                         }
 
@@ -95,7 +95,7 @@ StandaloneDashboard(function (db) {
             .fail(function (jqXHR, textStatus, errorThrown) {
                 alert("Impossible de récupérer le flux JSON");
                 console.error(textStatus, errorThrown);
-            })
+            });
     }
 
     self.sortBilans = function (bilans) {
