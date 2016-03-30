@@ -23,6 +23,11 @@ StandaloneDashboard(function (db) {
         var chart = new ChartComponent();
         chart.setCaption('Facturations');
         chart.setDimensions(12, 6);
+        chart.setYAxis("Facturations / mois", {
+            numberSuffix: "€",
+            numberHumanize: true
+        });
+
         chart.lock();
 
         self.loadDatas(function (bilans) {
