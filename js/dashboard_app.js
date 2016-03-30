@@ -32,61 +32,7 @@ StandaloneDashboard(function (db) {
 
         self.loadDatas(function (bilans) {
             self.bilans = self.sortBilans(bilans.bilans);
-            self.forNMonths(12, self.bilans, function (bilans, months) {
-                var series = [];
-                var labels = [];
-
-                months.forEach(function (month) {
-                    var monthTotal = 0;
-                    var date = month.split('/');
-
-                    bilans[month].forEach(function (bilan) {
-                        var fieldBilan = JSON.parse(bilan.field_bilan);
-                        var fieldBilanInitial = bilan.field_bilan_initial;
-                        var fieldBilanPourFacturation = bilan.field_pour_facturation;
-                        var keyWords = fieldBilan.keyWords;
-
-                        var total = 0;
-                        var coeffFactu = 1;
-
-                        if (fieldBilanPourFacturation == 0) {
-                            return;
-                        }
-
-                        keyWords.forEach(function (keyWord) {
-
-                            if (keyWord.found) {
-                                var position = keyWord.positions[0];
-
-                                if (position.position < 0 || position.position > 10) {
-                                    return;
-                                }
-
-                                total += 1 * bilan['field_factu_place_' + position.position];
-                            }
-                        });
-
-                        if (fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
-                            coeffFactu = bilan.field_coef_factu_first_iso;
-                        } else if (fieldBilanInitial <= fieldBilanPourFacturation) {
-                            coeffFactu = bilan.field_coef_factu_inf;
-                        } else if (fieldBilanInitial == fieldBilanPourFacturation) {
-                            coeffFactu = bilan.field_coef_factu_iso;
-                        }
-
-                        total *= coeffFactu;
-                        monthTotal += total;
-                    });
-
-
-                    labels.push(date[1] + '/' + date[0]);
-                    series.push(monthTotal);
-                });
-
-                chart.addSeries(series);
-                chart.setLabels(labels);
-                chart.unlock();
-            });
+            self.forNMonths(12, self.bilans, chart, self.chartFacturations);
         });
 
         db.addComponent(chart);
@@ -130,7 +76,7 @@ StandaloneDashboard(function (db) {
         return _bilans;
     }
 
-    self.forNMonths = function (nbMonth, bilans, cb) {
+    self.forNMonths = function (nbMonth, bilans, chart, cb) {
         var months = {};
         var keys = Object.keys(bilans).sort();
         var _monthsKeys = keys.slice(keys.length - nbMonth, keys.length);
@@ -141,7 +87,63 @@ StandaloneDashboard(function (db) {
             months[_monthKey] = bilans[_monthKey];
         }
 
-        cb(months, _monthsKeys);
+        cb(chart, months, _monthsKeys);
+    }
+
+    self.chartFacturations = function (chart, bilans, months) {
+        var series = [];
+        var labels = [];
+
+        months.forEach(function (month) {
+            var monthTotal = 0;
+            var date = month.split('/');
+
+            bilans[month].forEach(function (bilan) {
+                var fieldBilan = JSON.parse(bilan.field_bilan);
+                var fieldBilanInitial = bilan.field_bilan_initial;
+                var fieldBilanPourFacturation = bilan.field_pour_facturation;
+                var keyWords = fieldBilan.keyWords;
+
+                var total = 0;
+                var coeffFactu = 1;
+
+                if (fieldBilanPourFacturation == 0) {
+                    return;
+                }
+
+                keyWords.forEach(function (keyWord) {
+
+                    if (keyWord.found) {
+                        var position = keyWord.positions[0];
+
+                        if (position.position < 0 || position.position > 10) {
+                            return;
+                        }
+
+                        total += 1 * bilan['field_factu_place_' + position.position];
+                    }
+                });
+
+                if (fieldBilanInitial == fieldBilanPourFacturation && fieldBilanInitial == 1) {
+                    coeffFactu = bilan.field_coef_factu_first_iso;
+                } else if (fieldBilanInitial <= fieldBilanPourFacturation) {
+                    coeffFactu = bilan.field_coef_factu_inf;
+                } else if (fieldBilanInitial == fieldBilanPourFacturation) {
+                    coeffFactu = bilan.field_coef_factu_iso;
+                }
+
+                total *= coeffFactu;
+                monthTotal += total;
+            });
+
+
+            labels.push(date[1] + '/' + date[0]);
+            series.push(monthTotal);
+        });
+
+        chart.addSeries(series);
+        chart.setLabels(labels);
+        chart.unlock();
     }
 
     // // Add a chart to the dashboard. This is a simple chart with no customization.
