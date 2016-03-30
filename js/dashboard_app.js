@@ -1,8 +1,8 @@
 // Welcome to the RazorFlow Dashbord Quickstart. Simply copy this "dashboard_quickstart"
 // to somewhere in your computer/web-server to have a dashboard ready to use.
 // This is a great way to get started with RazorFlow with minimal time in setup.
-// However, once you're ready to go into deployment consult our documentation on tips for how to 
-// maintain the most stable and secure 
+// However, once you're ready to go into deployment consult our documentation on tips for how to
+// maintain the most stable and secure
 
 StandaloneDashboard(function (db) {
     // YOU CAN DELETE THE ENTIRE CONTENTS OF THIS FUNCTION AND CUSTOMIZE
@@ -23,9 +23,14 @@ StandaloneDashboard(function (db) {
         var chart = new ChartComponent();
         chart.setCaption('Facturations');
         chart.setDimensions(12, 6);
-        chart.setYAxis("Facturations / mois", {
-            numberSuffix: "€",
+
+        chart.addYAxis('facturations', "Facturations / mois", {
+            numberSuffix: '€',
             numberHumanize: true
+        });
+
+        chart.addYAxis('plafond', "Plafond", {
+            numberSuffix: '%'
         });
 
         chart.lock();
@@ -91,17 +96,20 @@ StandaloneDashboard(function (db) {
     }
 
     self.chartFacturations = function (chart, bilans, months) {
-        var series = [];
-        var labels = [];
+        var facturationsSeries = [];
+        var facturationsLabels = [];
+        var plafondSeries = [];
 
         months.forEach(function (month) {
             var monthTotal = 0;
+            var plafondTotal = 0;
             var date = month.split('/');
 
             bilans[month].forEach(function (bilan) {
                 var fieldBilan = JSON.parse(bilan.field_bilan);
                 var fieldBilanInitial = bilan.field_bilan_initial;
                 var fieldBilanPourFacturation = bilan.field_pour_facturation;
+                var fieldPlafondFacturation = bilan.field_plafond_facturation;
                 var keyWords = fieldBilan.keyWords;
 
                 var total = 0;
@@ -112,7 +120,6 @@ StandaloneDashboard(function (db) {
                 }
 
                 keyWords.forEach(function (keyWord) {
-
                     if (keyWord.found) {
                         var position = keyWord.positions[0];
 
@@ -133,43 +140,33 @@ StandaloneDashboard(function (db) {
                 }
 
                 total *= coeffFactu;
-                monthTotal += total;
+                monthTotal += parseFloat(total);
+                plafondTotal += parseFloat(fieldPlafondFacturation);
+
+                if(total > fieldPlafondFacturation) {
+                    console.warn("Une facture de " + month + " a dépassé le plafond (facture = "
+                    + total + ", plafond = " + fieldPlafondFacturation + ") ");
+                }
             });
 
+            console.log(plafondTotal);
+            console.log(monthTotal);
 
-            labels.push(date[1] + '/' + date[0]);
-            series.push(monthTotal);
+            facturationsSeries.push(monthTotal);
+            facturationsLabels.push(date[1] + '/' + date[0]);
+            plafondSeries.push( monthTotal / plafondTotal * 100);
         });
 
-        chart.addSeries(series);
-        chart.setLabels(labels);
-        chart.unlock();
-    }
+        chart.addSeries("Facturations", "facturations", facturationsSeries);
 
-    // // Add a chart to the dashboard. This is a simple chart with no customization.
-    // var chart = new ChartComponent();
-    // chart.setCaption("Sales");
-    // chart.setDimensions(6, 6);
-    // chart.setLabels(["2013", "2014", "2015"]);
-    // chart.addSeries([3151, 1121, 4982]);
-    //
-    // db.addComponent(chart);
-    //
-    // // You can add multiple charts to the same dashboard. In fact you can add many
-    // // different types of components. Check out the docs at razorflow.com/docs
-    // // to read about all the types of components.
-    // //
-    // // This is another chart with additional parameters passed to "addSeries" to
-    // // make customizations like change it to a line chart, and add "$" to indicate currency
-    // var chart2 = new ChartComponent();
-    // chart2.setCaption("Sales");
-    // chart2.setDimensions(6, 6);
-    // chart2.setLabels(["2013", "2014", "2015"]);
-    // chart2.addSeries([3151, 1121, 4982], {
-    //     numberPrefix: "$",
-    //     seriesDisplayType: "line"
-    // });
-    //
-    // db.addComponent(chart2);
+        chart.addSeries("Plafond", "plafond", plafondSeries, {
+            yAxis: 'plafond',
+            seriesDisplayType: 'line',
+        });
+
+        chart.setLabels(facturationsLabels);
+        chart.unlock();
+    });
+    
     self.init();
 });
